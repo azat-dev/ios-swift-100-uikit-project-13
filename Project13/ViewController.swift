@@ -26,7 +26,37 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         applyProcessing()
     }
     
+    @objc func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        let title: String
+        let message: String
+        
+        if let error = error {
+            title = "Save error"
+            message = error.localizedDescription
+        } else {
+            title = "Saved!"
+            message = "Your altered image has been saved to your photos."
+        }
+        
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(.init(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
     @IBAction func save(_ sender: UIButton) {
+        guard let image = imageView.image else { return }
+        
+        UIImageWriteToSavedPhotosAlbum(
+            image,
+            self,
+            #selector(image(_:didFinishSavingWithError:contextInfo:)),
+            nil
+        )
     }
     
     func setFilter(_ action: UIAlertAction) {
