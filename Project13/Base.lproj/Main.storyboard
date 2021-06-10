@@ -99,6 +99,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="changeFilterButton" destination="keD-ga-ZYh" id="jvg-F2-Bb2"/>
                         <outlet property="imageView" destination="dOG-q6-4aJ" id="Qi1-4M-Xts"/>
                         <outlet property="intensity" destination="VFO-jD-J0z" id="z8E-hw-ajY"/>
                     </connections>

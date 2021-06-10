@@ -10,8 +10,15 @@ import UIKit
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     @IBOutlet var imageView: UIImageView!
     @IBOutlet var intensity: UISlider!
+    @IBOutlet var changeFilterButton: UIButton!
     
     private var context: CIContext!
+    private var currentFilterName: String! {
+        didSet {
+            setFilter(name: currentFilterName)
+        }
+    }
+    
     private var currentFilter: CIFilter!
     private var currentImage: UIImage!
     
@@ -19,33 +26,25 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         super.viewDidLoad()
         
         context = CIContext()
-        currentFilter = CIFilter(name: "CISepiaTone")
+        currentFilterName = "CISepiaTone"
+    }
+    
+    private func setFilter(name: String) {
+        currentFilter = CIFilter(name: name)
+        changeFilterButton.setTitle(name, for: .normal)
+        
+        guard currentImage != nil else {
+            return
+        }
+        
+        let beginImage = CIImage(image: currentImage)
+        currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
+        
+        applyProcessing()
     }
     
     @IBAction func intensityChanged(_ sender: UISlider) {
         applyProcessing()
-    }
-    
-    @objc func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
-        let title: String
-        let message: String
-        
-        if let error = error {
-            title = "Save error"
-            message = error.localizedDescription
-        } else {
-            title = "Saved!"
-            message = "Your altered image has been saved to your photos."
-        }
-        
-        let alert = UIAlertController(
-            title: title,
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(.init(title: "OK", style: .default))
-        present(alert, animated: true)
     }
     
     @IBAction func save(_ sender: UIButton) {
@@ -69,23 +68,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         )
     }
     
-    func setFilter(_ action: UIAlertAction) {
-        guard currentImage != nil else {
-            return
-        }
-        
-        guard let title = action.title else {
-            return
-        }
-        
-        currentFilter = CIFilter(name: title)
-        
-        let beginImage = CIImage(image: currentImage)
-        currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
-        
-        applyProcessing()
-    }
-    
     @IBAction func changeFilter(_ sender: UIButton) {
         let alert = UIAlertController(
             title: "Choose effect",
@@ -105,13 +87,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
             "CIVignette"
         ]
         
-        
         for effect in effects {
             let action = UIAlertAction(
                 title: effect,
                 style: .default,
                 handler: {
-                    [weak self] action in self?.setFilter(action)
+                    [weak self] action in
+                    guard let title = action.title else {
+                        return
+                    }
+                    
+                    self?.currentFilterName = title
                 }
             )
             
@@ -127,20 +113,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         picker.delegate = self
         
         present(picker, animated: true)
-    }
-    
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        
-        guard let image = info[.editedImage] as? UIImage else {
-            return
-        }
-        
-        picker.dismiss(animated: true)
-        currentImage = image
-        let beginImage = CIImage(image: currentImage)
-        currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
-        
-        applyProcessing()
     }
     
     func applyProcessing() {
@@ -180,3 +152,43 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 }
 
+// MARK: - Photolibrary Methods
+extension ViewController {
+    
+    @objc func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        let title: String
+        let message: String
+        
+        if let error = error {
+            title = "Save error"
+            message = error.localizedDescription
+        } else {
+            title = "Saved!"
+            message = "Your altered image has been saved to your photos."
+        }
+        
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(.init(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        
+        guard let image = info[.editedImage] as? UIImage else {
+            return
+        }
+        
+        picker.dismiss(animated: true)
+        currentImage = image
+        
+        let beginImage = CIImage(image: currentImage)
+        currentFilter.setValue(beginImage, forKey: kCIInputImageKey)
+        
+        applyProcessing()
+    }
+}
