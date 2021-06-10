@@ -49,7 +49,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     @IBAction func save(_ sender: UIButton) {
-        guard let image = imageView.image else { return }
+        guard let image = imageView.image else {
+            let alert = UIAlertController(
+                title: "Error",
+                message: "The image is required!",
+                preferredStyle: .alert
+            )
+            
+            alert.addAction(.init(title: "Ok", style: .default))
+            present(alert, animated: true)
+            return
+        }
         
         UIImageWriteToSavedPhotosAlbum(
             image,
