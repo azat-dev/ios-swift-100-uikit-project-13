@@ -12,6 +12,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     @IBOutlet var intensity: UISlider!
     @IBOutlet var radius: UISlider!
     @IBOutlet var changeFilterButton: UIButton!
+    @IBOutlet var radiusGroup: UIStackView!
+    @IBOutlet var intensityGroup: UIStackView!
     
     private var context: CIContext!
     private var currentFilterName: String! {
@@ -31,11 +33,25 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     private func setFilter(name: String) {
+        let isFirstRun = currentFilter == nil
         currentFilter = CIFilter(name: name)
         changeFilterButton.setTitle(name, for: .normal)
         
         let inputKeys = currentFilter.inputKeys
-        radius.isHidden = !inputKeys.contains(kCIInputRadiusKey)
+        let changeSlidersVisibility: () -> Void = {
+            [weak self] in
+            self?.intensityGroup.isHidden = !inputKeys.contains(kCIInputIntensityKey)
+            self?.radiusGroup.isHidden = !inputKeys.contains(kCIInputRadiusKey)
+        }
+        
+        if isFirstRun {
+            changeSlidersVisibility()
+        } else {
+            UIView.animate(
+                withDuration: 0.25,
+                animations: changeSlidersVisibility
+            )
+        }
         
         guard currentImage != nil else {
             return
