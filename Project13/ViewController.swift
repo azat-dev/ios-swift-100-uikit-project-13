@@ -10,6 +10,7 @@ import UIKit
 class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     @IBOutlet var imageView: UIImageView!
     @IBOutlet var intensity: UISlider!
+    @IBOutlet var radius: UISlider!
     @IBOutlet var changeFilterButton: UIButton!
     
     private var context: CIContext!
@@ -33,6 +34,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         currentFilter = CIFilter(name: name)
         changeFilterButton.setTitle(name, for: .normal)
         
+        let inputKeys = currentFilter.inputKeys
+        radius.isHidden = !inputKeys.contains(kCIInputRadiusKey)
+        
         guard currentImage != nil else {
             return
         }
@@ -44,6 +48,10 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     @IBAction func intensityChanged(_ sender: UISlider) {
+        applyProcessing()
+    }
+    
+    @IBAction func radiusChanged(_ sender: UISlider) {
         applyProcessing()
     }
     
@@ -127,7 +135,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         }
         
         if inputKeys.contains(kCIInputRadiusKey) {
-            currentFilter.setValue(intensity.value * 200, forKey: kCIInputRadiusKey)
+            currentFilter.setValue(radius.value * 200, forKey: kCIInputRadiusKey)
         }
         
         if inputKeys.contains(kCIInputScaleKey) {
